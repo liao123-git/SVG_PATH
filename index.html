@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SVG</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        svg {
+            stroke: #000;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        #mySvg {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%"
+     id="paths">
+</svg>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%"
+     id="mySvg">
+</svg>
+<script>
+    const svg = document.getElementById("mySvg");
+    const pathSvg = document.getElementById("paths");
+    const svgNS = "http://www.w3.org/2000/svg";
+    let state = false;
+    let lastPoint = false;
+    let key = 0;
+
+    svg.addEventListener("mousedown", function (e) {
+        state = true;
+        let rect2 = document.getElementById(`ellipseTwo${key}`);
+        let line = document.getElementById(`line${key}`);
+        if (rect2) {
+            rect2.remove();
+            line.setAttributeNS(null, "x1", lastPoint.x);
+            line.setAttributeNS(null, "y1", lastPoint.y);
+        }
+
+        const rect = document.createElementNS(svgNS, "rect");
+        rect.setAttributeNS(null, "id", `rect${++key}`);
+        rect.setAttributeNS(null, "x", e.clientX - 5);
+        rect.setAttributeNS(null, "y", e.clientY - 5);
+        rect.setAttributeNS(null, "width", "10");
+        rect.setAttributeNS(null, "height", "10");
+        rect.setAttributeNS(null, "fill", "#93b5cf");
+        rect.setAttributeNS(null, "stroke-width", "0");
+        if (lastPoint) {
+            const lastRect = document.getElementById(`rect${key - 1}`);
+            lastRect.setAttributeNS(null, "fill", "white");
+            lastRect.setAttributeNS(null, "stroke", "#93b5cf");
+            lastRect.setAttributeNS(null, "stroke-width", "1");
+
+            const path = document.createElementNS(svgNS, "path");
+            path.setAttributeNS(null, "id", `path${key}`);
+            path.setAttributeNS(null, "d", `M ${lastPoint.x},${lastPoint.y} Q ${e.clientX},${e.clientY} ${e.clientX},${e.clientY}`);
+
+            pathSvg.appendChild(path);
+        }
+
+        svg.appendChild(rect);
+        lastPoint = {x: e.clientX, y: e.clientY, lastPoint};
+    });
+
+    svg.addEventListener("mousemove", function (e) {
+        if (state && lastPoint.lastPoint) {
+            const path = document.getElementById(`path${key}`);
+            let nowX = e.clientX;
+            let nowY = e.clientY;
+            let diffX = lastPoint.x - e.clientX;
+            let diffY = lastPoint.y - e.clientY;
+
+            let rect = document.getElementById(`ellipse${key}`);
+            let rect2 = document.getElementById(`ellipseTwo${key}`);
+            let line = document.getElementById(`line${key}`);
+            if (rect == null) {
+                rect = document.createElementNS(svgNS, "ellipse");
+                rect.setAttributeNS(null, "id", `ellipse${key}`);
+                rect.setAttributeNS(null, "cx", e.clientX);
+                rect.setAttributeNS(null, "cy", e.clientY);
+                rect.setAttributeNS(null, "rx", "5");
+                rect.setAttributeNS(null, "ry", "5");
+                rect.setAttributeNS(null, "fill", "white");
+                rect.setAttributeNS(null, "stroke", "#93b5cf");
+                rect.setAttributeNS(null, "stroke-width", "1");
+                svg.appendChild(rect);
+
+
+                rect2 = document.createElementNS(svgNS, "ellipse");
+                rect2.setAttributeNS(null, "id", `ellipseTwo${key}`);
+                rect2.setAttributeNS(null, "cx", lastPoint.x + diffX);
+                rect2.setAttributeNS(null, "cy", lastPoint.y + diffY);
+                rect2.setAttributeNS(null, "rx", "5");
+                rect2.setAttributeNS(null, "ry", "5");
+                rect2.setAttributeNS(null, "fill", "white");
+                rect2.setAttributeNS(null, "stroke", "#93b5cf");
+                rect2.setAttributeNS(null, "stroke-width", "1");
+                svg.appendChild(rect2);
+
+                line = document.createElementNS(svgNS, "line");
+                line.setAttributeNS(null, "id", `line${key}`);
+                line.setAttributeNS(null, "x1", lastPoint.x + diffX);
+                line.setAttributeNS(null, "y1", lastPoint.y + diffY);
+                line.setAttributeNS(null, "x2", nowX);
+                line.setAttributeNS(null, "y2", nowY);
+                line.setAttributeNS(null, "stroke", "#93b5cf");
+                line.setAttributeNS(null, "stroke-width", "1");
+                pathSvg.appendChild(line);
+            } else {
+                rect.setAttributeNS(null, "cx", nowX);
+                rect.setAttributeNS(null, "cy", nowY);
+
+                rect2.setAttributeNS(null, "cx", lastPoint.x + diffX);
+                rect2.setAttributeNS(null, "cy", lastPoint.y + diffY);
+
+                line.setAttributeNS(null, "x1", lastPoint.x + diffX);
+                line.setAttributeNS(null, "y1", lastPoint.y + diffY);
+                line.setAttributeNS(null, "x2", nowX);
+                line.setAttributeNS(null, "y2", nowY);
+            }
+
+            path.setAttributeNS(null, "d", `M ${lastPoint.lastPoint.x},${lastPoint.lastPoint.y} Q ${lastPoint.x + diffX},${lastPoint.y + diffY} ${lastPoint.x},${lastPoint.y}`);
+        }
+    });
+
+    svg.addEventListener("mouseup", function () {
+        state = false;
+    });
+</script>
+</body>
+</html>
